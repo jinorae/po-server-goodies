@@ -50,7 +50,7 @@ catch (e) {
     trivData = {};
 }
 
-var neededData = ["submitBans", "toFlash", "mutes", "leaderBoard", "triviaWarnings", "autostartRange", "equivalentCats","equivalentAns","specialChance","hiddenCategories"];
+var neededData = ["submitBans", "toFlash", "mutes", "leaderBoard", "triviaWarnings", "autostartRange", "equivalentCats","equivalentAns","specialChance","hiddenCategories","votingCooldown"];
 for (var i = 0; i < neededData.length; ++i) {
     var data = neededData[i];
     if (trivData[data] === undefined) {
@@ -65,6 +65,9 @@ for (var i = 0; i < neededData.length; ++i) {
         }
         else if (data === "specialChance") {
             trivData[data] = 0;
+        }
+        else if (data === "votingCooldown") {
+            trivData[data] = 5;
         }
         else {
             trivData[data] = {};
@@ -830,7 +833,7 @@ TriviaGame.prototype.finalizeAnswers = function () {
         this.resetTrivia();
         runUpdate();
         this.lastvote++;
-        if (this.voting && this.lastvote == 3) {
+        if (this.voting && this.lastvote == trivData.votingCooldown) {
             this.phase = "voting";
             this.ticks = 5;
         }
@@ -2776,8 +2779,20 @@ addAdminCommand(["setspecialchance"], function (src, commandData, channel) {
         trivData.specialChance = parseInt(commandData);
         saveData();
         triviabot.sendMessage(src, "Special chance set to " + commandData, channel);
+    } else {
+        triviabot.sendMessage(src, "Special chance is currently set to " + trivData.specialChance, channel);
     }
 }, "Modify chance of special categories appearing.");
+
+addAdminCommand(["setvotingcooldown"], function (src, commandData, channel) {
+    if (!isNaN(commandData)) {
+        trivData.votingCooldown = parseInt(commandData);
+        saveData();
+        triviabot.sendMessage(src, "Voting cooldown set to " + commandData + " rounds.", channel);
+    } else {
+        triviabot.sendMessage(src, "Voting cooldown is currently " + trivData.votingCooldown + " rounds.", channel);
+    }
+}, "Set number of games needed until category voting starts.");
 
 /*addOwnerCommand("revertfrom", function(src, commandData, channel) {
     commandData = commandData.split(":");
